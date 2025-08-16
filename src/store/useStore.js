@@ -6,13 +6,15 @@ const useStore = create((set) => ({
   priceData: null,
   maData: null,
   levels: null,
+  bollingerBandsData: null, // Добавляем состояние для полос Боллинджера
   
   setSelectedPair: (pair) => set({ selectedPair: pair }),
   
   setChartData: (data) => set({ 
     priceData: data.priceData,
     maData: data.maData,
-    levels: data.levels 
+    levels: data.levels,
+    bollingerBandsData: data.bollingerBandsData, // Сохраняем данные полос Боллинджера
   }),
 }));
 

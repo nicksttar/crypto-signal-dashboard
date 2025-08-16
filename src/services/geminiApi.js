@@ -3,9 +3,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY);
 
-// Убираем macdData и bbData из параметров
-export const getAiSignalAnalysis = async (pair, priceData, maData, levels, news) => {
-  if (!priceData || !maData || !levels || maData.length === 0) {
+// Обновленная функция, теперь включает bollingerBandsData
+export const getAiSignalAnalysis = async (pair, priceData, maData, levels, news, bollingerBandsData) => {
+  if (!priceData || !maData || !levels || !bollingerBandsData || priceData.length === 0) {
     return { error: "Недостаточно технических данных для анализа." };
   }
 
@@ -25,6 +25,15 @@ export const getAiSignalAnalysis = async (pair, priceData, maData, levels, news)
     ? news.map(article => `- ${article.title}`).join('\n')
     : "Нет свежих новостей.";
 
+  // Добавляем данные по полосам Боллинджера в промпт
+  const lastBB = bollingerBandsData[bollingerBandsData.length - 1];
+  const bollingerSummary = `
+    - Полосы Боллинджера:
+      - Верхняя: ${lastBB.upper.toFixed(2)}
+      - Средняя: ${lastBB.middle.toFixed(2)}
+      - Нижняя: ${lastBB.lower.toFixed(2)}
+  `;
+
   const prompt = `
     Ты — профессиональный и детальный крипто-аналитик. Твоя задача — объединить технический и фундаментальный анализ для пары ${pair} и предоставить исчерпывающий торговый сигнал в формате JSON.
 
@@ -33,6 +42,7 @@ export const getAiSignalAnalysis = async (pair, priceData, maData, levels, news)
     - SMA(50): ${lastMa}
     - Поддержка: ${supportLevels}
     - Сопротивление: ${resistanceLevels}
+    ${bollingerSummary}
 
     2. Фундаментальные данные (последние новости):
     ${newsHeadlines}
@@ -47,7 +57,8 @@ export const getAiSignalAnalysis = async (pair, priceData, maData, levels, news)
       "take_profit": "Твой предложенный уровень для тейк-профита.",
       "technical_summary": [
         { "indicator": "Цена vs SMA(50)", "value": "Твой вывод о положении цены", "sentiment": "Positive, Negative или Neutral" },
-        { "indicator": "Уровни", "value": "Твой вывод о взаимодействии с уровнями", "sentiment": "Positive, Negative или Neutral" }
+        { "indicator": "Уровни", "value": "Твой вывод о взаимодействии с уровнями", "sentiment": "Positive, Negative или Neutral" },
+        { "indicator": "Полосы Боллинджера", "value": "Твой вывод о положении цены относительно полос", "sentiment": "Positive, Negative или Neutral" }
       ],
       "news_sentiment": {
         "sentiment": "Positive, Negative или Neutral на основе новостей",

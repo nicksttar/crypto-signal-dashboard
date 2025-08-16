@@ -2,7 +2,8 @@
 import { useEffect } from 'react';
 import { createChart, CandlestickSeries, LineStyle, LineSeries } from 'lightweight-charts';
 
-function useChart(chartContainerRef, priceData, maData, levels, showMa, showLevels) {
+// Обновлен для приема bollingerBandsData в качестве отдельного параметра
+function useChart(chartContainerRef, priceData, maData, levels, bollingerBandsData, showMa, showLevels, showBollinger) {
   useEffect(() => {
     if (!chartContainerRef.current || !priceData || priceData.length === 0) {
       return;
@@ -51,6 +52,34 @@ function useChart(chartContainerRef, priceData, maData, levels, showMa, showLeve
         });
     }
 
+    // Исправлено: используем bollingerBandsData напрямую
+    if (showBollinger && bollingerBandsData && bollingerBandsData.length > 0) {
+        const upperBandData = bollingerBandsData.map(d => ({ time: d.time, value: d.upper }));
+        const middleBandData = bollingerBandsData.map(d => ({ time: d.time, value: d.middle }));
+        const lowerBandData = bollingerBandsData.map(d => ({ time: d.time, value: d.lower }));
+
+        const upperSeries = chart.addSeries(LineSeries, {
+            color: '#FF6347',
+            lineWidth: 1,
+            lineStyle: LineStyle.Solid,
+        });
+        upperSeries.setData(upperBandData);
+
+        const middleSeries = chart.addSeries(LineSeries, {
+            color: '#FFD700',
+            lineWidth: 1,
+            lineStyle: LineStyle.Solid,
+        });
+        middleSeries.setData(middleBandData);
+
+        const lowerSeries = chart.addSeries(LineSeries, {
+            color: '#6A5ACD',
+            lineWidth: 1,
+            lineStyle: LineStyle.Solid,
+        });
+        lowerSeries.setData(lowerBandData);
+    }
+    
     chart.timeScale().fitContent(); 
 
     const resizeObserver = new ResizeObserver(entries => {
@@ -64,7 +93,7 @@ function useChart(chartContainerRef, priceData, maData, levels, showMa, showLeve
       resizeObserver.disconnect();
       chart.remove();
     };
-  }, [priceData, maData, levels, chartContainerRef, showMa, showLevels]);
+  }, [priceData, maData, levels, bollingerBandsData, chartContainerRef, showMa, showLevels, showBollinger]);
 }
 
 export default useChart;

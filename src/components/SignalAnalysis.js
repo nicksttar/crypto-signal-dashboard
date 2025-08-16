@@ -80,7 +80,7 @@ const AnalysisResult = ({ analysis, news }) => {
 };
 
 function SignalAnalysis() {
-  const { selectedPair, priceData, maData, levels } = useStore();
+  const { selectedPair, priceData, maData, levels, bollingerBandsData } = useStore(); 
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [news, setNews] = useState(null);
@@ -98,15 +98,17 @@ function SignalAnalysis() {
   const isDataReadyForRender = 
     priceData && priceData.length > 0 &&
     maData && maData.length > 0 &&
-    levels && levels.length > 0;
+    levels && levels.length > 0 &&
+    bollingerBandsData && bollingerBandsData.length > 0;
 
   const handleAnalysisClick = async () => {
     const currentState = useStore.getState();
     const isDataTrulyReady = 
         currentState.priceData && currentState.priceData.length > 0 &&
         currentState.maData && currentState.maData.length > 0 &&
-        currentState.levels && currentState.levels.length > 0;
-
+        currentState.levels && currentState.levels.length > 0 &&
+        currentState.bollingerBandsData && currentState.bollingerBandsData.length > 0;
+        
     if (!isDataTrulyReady) {
         setError("Технические данные еще не рассчитаны или неполны. Пожалуйста, подождите или выберите другую пару.");
         return;
@@ -130,7 +132,8 @@ function SignalAnalysis() {
       currentState.priceData, 
       currentState.maData, 
       currentState.levels, 
-      fetchedNews
+      fetchedNews,
+      currentState.bollingerBandsData
     );
       
     if (result.error) {
@@ -146,13 +149,13 @@ function SignalAnalysis() {
   };
 
   return (
-    <Card>
-      <Card.Header>AI Анализ Сигнала</Card.Header>
+    <Card className="mt-4">
+      <Card.Header>Сводка AI-анализа</Card.Header>
+      {/* Убрали класс "text-center" для возврата к исходному выравниванию */}
       <Card.Body>
         {loading ? (
-          <div className="text-center">
-            <Spinner animation="border" variant="light" />
-            <p className="mt-2">Загружаю новости и анализирую...</p>
+          <div className="d-flex justify-content-center align-items-center h-100">
+            <Spinner animation="border" variant="light" /><span className="ms-2">Загружаю новости и анализирую...</span>
           </div>
         ) : (
           <>
@@ -162,21 +165,20 @@ function SignalAnalysis() {
                 analysis={analysis} 
                 news={news}
               /> : 
-              <p>Нажмите кнопку, чтобы получить анализ от AI.</p>
+              <p className='d-flex justify-content-center'>Нажмите кнопку, чтобы получить анализ от AI.</p>
             }
           </>
         )}
       </Card.Body>
       <Card.Footer className="animated-button-container">
-        {/* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Оборачиваем кнопку --- */}
-        <div className="gradient-button-wrapper">
-            <Button 
-            onClick={handleAnalysisClick} 
-            disabled={loading || !isDataReadyForRender || cooldown > 0}
-            >
-            {cooldown > 0 ? `Подождите ${cooldown}с` : (loading ? 'Анализ...' : 'Получить AI анализ')}
-            </Button>
-        </div>
+          <div className="gradient-button-wrapper">
+              <Button 
+                onClick={handleAnalysisClick} 
+                disabled={loading || !isDataReadyForRender || cooldown > 0}
+              >
+                {cooldown > 0 ? `Подождите ${cooldown}с` : (loading ? 'Анализ...' : 'Получить AI анализ')}
+              </Button>
+          </div>
       </Card.Footer>
     </Card>
   );
