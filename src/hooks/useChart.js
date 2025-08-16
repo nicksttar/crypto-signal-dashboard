@@ -1,15 +1,14 @@
 // src/hooks/useChart.js
 import { useEffect } from 'react';
-import { createChart, CandlestickSeries, AreaSeries, LineStyle } from 'lightweight-charts';
+import { createChart, CandlestickSeries, LineStyle, LineSeries } from 'lightweight-charts';
 
-function useChart(chartContainerRef, priceData, rsiData, levels, showRsi, showLevels) {
+function useChart(chartContainerRef, priceData, maData, levels, showMa, showLevels) {
   useEffect(() => {
     if (!chartContainerRef.current || !priceData || priceData.length === 0) {
       return;
     }
 
     const chart = createChart(chartContainerRef.current, {
-      // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Используем высоту контейнера ---
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
       layout: { background: { color: '#ffffff' }, textColor: '#333' },
@@ -26,29 +25,12 @@ function useChart(chartContainerRef, priceData, rsiData, levels, showRsi, showLe
     });
     candleSeries.setData(priceData);
 
-    if (showRsi && rsiData && rsiData.length > 0) {
-      const rsiSeries = chart.addSeries(AreaSeries, {
-          pane: 1,
-          lineColor: 'rgba(76, 175, 80, 1)',
-          topColor: 'rgba(76, 175, 80, 0.2)',
-          bottomColor: 'rgba(76, 175, 80, 0)',
-          lineWidth: 2,
-          lastValueVisible: false,
-          axisLabelVisible: false,
-          priceScale: {
-            autoscale: true,
-          }
+    if (showMa && maData && maData.length > 0) {
+      const maSeries = chart.addSeries(LineSeries, {
+        color: 'rgba(41, 98, 255, 1)',
+        lineWidth: 2,
       });
-      rsiSeries.setData(rsiData);
-
-      rsiSeries.createPriceLine({
-        price: 70, color: '#ef5350', lineWidth: 1, lineStyle: LineStyle.Dashed,
-        axisLabelVisible: true, title: '70',
-      });
-      rsiSeries.createPriceLine({
-        price: 30, color: '#26a69a', lineWidth: 1, lineStyle: LineStyle.Dashed,
-        axisLabelVisible: true, title: '30',
-      });
+      maSeries.setData(maData);
     }
     
     if (showLevels && levels && levels.length > 0) {
@@ -64,16 +46,18 @@ function useChart(chartContainerRef, priceData, rsiData, levels, showRsi, showLe
 
     chart.timeScale().fitContent(); 
 
-    const handleResize = () => {
-        chart.resize(chartContainerRef.current.clientWidth, chartContainerRef.current.clientHeight);
-    };
-    window.addEventListener('resize', handleResize);
+    const resizeObserver = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      chart.resize(width, height);
+    });
+
+    resizeObserver.observe(chartContainerRef.current);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       chart.remove();
     };
-  }, [priceData, rsiData, levels, chartContainerRef, showRsi, showLevels]);
+  }, [priceData, maData, levels, chartContainerRef, showMa, showLevels]);
 }
 
 export default useChart;

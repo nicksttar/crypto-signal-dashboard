@@ -1,7 +1,7 @@
 // src/components/TradingChart.js
 import React, { useEffect, useState, useRef } from 'react';
 import { Card, Spinner, Button, ButtonGroup } from 'react-bootstrap';
-import { RSI } from 'technicalindicators';
+import { SMA } from 'technicalindicators'; // Убрали лишние импорты
 import { getKlines } from '../services/binanceApi';
 import useChart from '../hooks/useChart';
 import useStore from '../store/useStore';
@@ -36,41 +36,50 @@ const calculateSupportResistance = (klines) => {
 };
 
 function TradingChart() {
-  const { selectedPair, priceData, rsiData, levels, setChartData } = useStore();
+  const { selectedPair, priceData, maData, levels, setChartData } = useStore();
   const [loading, setLoading] = useState(true);
   const chartContainerRef = useRef(null);
   
-  const [showRsi, setShowRsi] = useState(false);
-  const [showLevels, setShowLevels] = useState(true);
+  const [showMa, setShowMa] = useState(false);
+  const [showLevels, setShowLevels] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      setChartData({ priceData: null, rsiData: null, levels: null });
+      // Убираем сброс macdData и bbData
+      setChartData({ priceData: null, maData: null, levels: null });
       const klines = await getKlines(selectedPair, '4h', 500);
-      let formattedRsi = null;
+      
+      let formattedMa = null;
       let formattedLevels = null;
+
       if (klines && klines.length > 1) {
         const closePrices = klines.map(k => k.close);
-        const rsiInput = { values: closePrices, period: 14 };
-        const rsiResult = RSI.calculate(rsiInput);
-        formattedRsi = rsiResult.map((value, index) => ({
-            time: klines[index + rsiInput.period]?.time,
+
+        const smaInput = { values: closePrices, period: 50 };
+        const smaResult = SMA.calculate(smaInput);
+        formattedMa = smaResult.map((value, index) => ({
+            time: klines[index + smaInput.period - 1]?.time,
             value: value
         })).filter(item => item && item.time);
+
         formattedLevels = calculateSupportResistance(klines);
       }
+      
+      // Убираем передачу macdData и bbData
       setChartData({
         priceData: klines,
-        rsiData: formattedRsi,
-        levels: formattedLevels
+        maData: formattedMa,
+        levels: formattedLevels,
       });
+      
       setLoading(false);
     };
+
     fetchData();
   }, [selectedPair, setChartData]);
 
-  useChart(chartContainerRef, priceData, rsiData, levels, showRsi, showLevels);
+  useChart(chartContainerRef, priceData, maData, levels, showMa, showLevels);
 
   return (
     <Card>
@@ -85,23 +94,22 @@ function TradingChart() {
             {showLevels ? 'Скрыть уровни' : 'Показать уровни'}
           </Button>
           <Button 
-            variant={showRsi ? "secondary" : "primary"} 
+            variant={showMa ? "secondary" : "primary"} 
             size="sm"
-            onClick={() => setShowRsi(!showRsi)}
+            onClick={() => setShowMa(!showMa)}
           >
-            {showRsi ? 'Скрыть RSI' : 'Показать RSI'}
+            {showMa ? 'Скрыть SMA(50)' : 'Показать SMA(50)'}
           </Button>
         </ButtonGroup>
       </Card.Header>
-      {/* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Динамическая высота --- */}
-      <Card.Body style={{ height: showRsi ? '650px' : '500px', position: 'relative', transition: 'height 0.3s ease-in-out' }}>
+      <Card.Body style={{ height: '500px', position: 'relative' }}>
         {loading ? (
           <div className="d-flex justify-content-center align-items-center h-100">
             <Spinner animation="border" /><span className="ms-2">Загрузка данных...</span>
           </div>
         ) : (
           <div 
-            key={`${showRsi}-${showLevels}`}
+            key={`${showMa}-${showLevels}`}
             ref={chartContainerRef} 
             id="chart-container" 
             style={{ height: '100%', width: '100%' }}
