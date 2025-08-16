@@ -1,7 +1,7 @@
 // src/components/TradingChart.js
 import React, { useEffect, useState, useRef } from 'react';
 import { Card, Spinner, Button, ButtonGroup } from 'react-bootstrap';
-import { SMA } from 'technicalindicators'; // Убрали лишние импорты
+import { SMA } from 'technicalindicators';
 import { getKlines } from '../services/binanceApi';
 import useChart from '../hooks/useChart';
 import useStore from '../store/useStore';
@@ -46,36 +46,27 @@ function TradingChart() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      // Убираем сброс macdData и bbData
       setChartData({ priceData: null, maData: null, levels: null });
       const klines = await getKlines(selectedPair, '4h', 500);
-      
       let formattedMa = null;
       let formattedLevels = null;
-
       if (klines && klines.length > 1) {
         const closePrices = klines.map(k => k.close);
-
         const smaInput = { values: closePrices, period: 50 };
         const smaResult = SMA.calculate(smaInput);
         formattedMa = smaResult.map((value, index) => ({
             time: klines[index + smaInput.period - 1]?.time,
             value: value
         })).filter(item => item && item.time);
-
         formattedLevels = calculateSupportResistance(klines);
       }
-      
-      // Убираем передачу macdData и bbData
       setChartData({
         priceData: klines,
         maData: formattedMa,
         levels: formattedLevels,
       });
-      
       setLoading(false);
     };
-
     fetchData();
   }, [selectedPair, setChartData]);
 
@@ -87,14 +78,14 @@ function TradingChart() {
         <span>График {selectedPair}</span>
         <ButtonGroup>
           <Button 
-            variant={showLevels ? "secondary" : "primary"} 
+            variant={showLevels ? "light" : "outline-light"} 
             size="sm"
             onClick={() => setShowLevels(!showLevels)}
           >
             {showLevels ? 'Скрыть уровни' : 'Показать уровни'}
           </Button>
           <Button 
-            variant={showMa ? "secondary" : "primary"} 
+            variant={showMa ? "light" : "outline-light"} 
             size="sm"
             onClick={() => setShowMa(!showMa)}
           >
@@ -105,7 +96,7 @@ function TradingChart() {
       <Card.Body style={{ height: '500px', position: 'relative' }}>
         {loading ? (
           <div className="d-flex justify-content-center align-items-center h-100">
-            <Spinner animation="border" /><span className="ms-2">Загрузка данных...</span>
+            <Spinner animation="border" variant="light" /><span className="ms-2">Загрузка...</span>
           </div>
         ) : (
           <div 

@@ -14,7 +14,7 @@ const TechnicalSummary = ({ summary }) => {
   };
   return (
     <>
-      <hr />
+      <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}/>
       <h6>Техническая сводка:</h6>
       <ul className="list-unstyled small">
         {summary.map((item, index) => (
@@ -41,7 +41,7 @@ const AnalysisResult = ({ analysis, news }) => {
       <p className="mb-1"><strong>Уверенность:</strong> {analysis.confidence}</p>
       <p><strong>Обоснование:</strong> {analysis.reason}</p>
       <TechnicalSummary summary={analysis.technical_summary} />
-      <hr />
+      <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}/>
       <h6>Торговый план:</h6>
       <ul className="list-unstyled">
         <li><strong>Точка входа:</strong> {analysis.entry_point}</li>
@@ -50,7 +50,7 @@ const AnalysisResult = ({ analysis, news }) => {
       </ul>
       {analysis.news_sentiment && (
         <>
-         <hr />
+         <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}/>
          <h6>Анализ новостного фона:</h6>
          <p className="mb-1">
             <strong>Тональность: </strong> 
@@ -95,7 +95,6 @@ function SignalAnalysis() {
     }
   }, [cooldown]);
 
-  // --- ИСПРАВЛЕНИЕ ЗДЕСЬ: Более строгая проверка готовности данных ---
   const isDataReadyForRender = 
     priceData && priceData.length > 0 &&
     maData && maData.length > 0 &&
@@ -103,7 +102,6 @@ function SignalAnalysis() {
 
   const handleAnalysisClick = async () => {
     const currentState = useStore.getState();
-    // Проверяем актуальное состояние еще раз на случай гонки состояний
     const isDataTrulyReady = 
         currentState.priceData && currentState.priceData.length > 0 &&
         currentState.maData && currentState.maData.length > 0 &&
@@ -137,20 +135,23 @@ function SignalAnalysis() {
       
     if (result.error) {
       setError(result.error);
+      if (result.isRateLimitError) {
+        setCooldown(60);
+      }
     } else {
       setAnalysis(result);
+      setCooldown(30);
     }
     setLoading(false);
-    setCooldown(30);
   };
 
   return (
-    <Card className="mt-4">
+    <Card>
       <Card.Header>AI Анализ Сигнала</Card.Header>
       <Card.Body>
         {loading ? (
           <div className="text-center">
-            <Spinner animation="border" />
+            <Spinner animation="border" variant="light" />
             <p className="mt-2">Загружаю новости и анализирую...</p>
           </div>
         ) : (
@@ -166,10 +167,16 @@ function SignalAnalysis() {
           </>
         )}
       </Card.Body>
-      <Card.Footer className="text-end">
-        <Button onClick={handleAnalysisClick} disabled={loading || !isDataReadyForRender || cooldown > 0}>
-          {cooldown > 0 ? `Подождите ${cooldown}с` : (loading ? 'Анализ...' : 'Получить AI анализ')}
-        </Button>
+      <Card.Footer className="animated-button-container">
+        {/* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Оборачиваем кнопку --- */}
+        <div className="gradient-button-wrapper">
+            <Button 
+            onClick={handleAnalysisClick} 
+            disabled={loading || !isDataReadyForRender || cooldown > 0}
+            >
+            {cooldown > 0 ? `Подождите ${cooldown}с` : (loading ? 'Анализ...' : 'Получить AI анализ')}
+            </Button>
+        </div>
       </Card.Footer>
     </Card>
   );

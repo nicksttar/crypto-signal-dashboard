@@ -1,4 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './dark-theme.css'; // <-- Убедитесь, что эта строка есть
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';

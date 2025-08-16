@@ -8,7 +8,7 @@ import SignalAnalysis from './components/SignalAnalysis';
 
 function App() {
   return (
-    <div className="App bg-light" style={{ minHeight: '100vh' }}>
+    <div className="App">
       <Header />
       <Container className="py-4">
         <Row>
@@ -16,7 +16,7 @@ function App() {
             <PairSelector />
           </Col>
         </Row>
-        <Row>
+        <Row className="mt-4">
           <Col>
             <TradingChart />
           </Col>

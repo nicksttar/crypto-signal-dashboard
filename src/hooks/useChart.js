@@ -11,11 +11,18 @@ function useChart(chartContainerRef, priceData, maData, levels, showMa, showLeve
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
-      layout: { background: { color: '#ffffff' }, textColor: '#333' },
-      grid: { vertLines: { color: '#f0f0f0' }, horzLines: { color: '#f0f0f0' } },
-      timeScale: { timeVisible: true, secondsVisible: false },
+      layout: { 
+        background: { color: 'transparent' }, 
+        textColor: '#d1d4dc' 
+      },
+      grid: { 
+        vertLines: { color: 'rgba(255, 255, 255, 0.1)' }, 
+        horzLines: { color: 'rgba(255, 255, 255, 0.1)' } 
+      },
+      timeScale: { timeVisible: true, secondsVisible: false, borderColor: 'rgba(255, 255, 255, 0.2)' },
       priceScale: {
         autoscale: true,
+        borderColor: 'rgba(255, 255, 255, 0.2)'
       },
     });
 
@@ -27,7 +34,7 @@ function useChart(chartContainerRef, priceData, maData, levels, showMa, showLeve
 
     if (showMa && maData && maData.length > 0) {
       const maSeries = chart.addSeries(LineSeries, {
-        color: 'rgba(41, 98, 255, 1)',
+        color: '#3d5af1',
         lineWidth: 2,
       });
       maSeries.setData(maData);
